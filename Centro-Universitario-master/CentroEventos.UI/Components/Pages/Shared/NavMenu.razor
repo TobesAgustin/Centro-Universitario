@@ -1,0 +1,51 @@
+﻿@using CentroEventos.Aplicacion.Enum
+@using Microsoft.AspNetCore.Components.Authorization
+
+<MudNavMenu>
+    <MudNavLink Href="/Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+
+    <MudNavGroup Title="Personas" Icon="@Icons.Material.Filled.Person" Expanded="true">
+        <MudNavLink Href="/personas/listar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Listar
+            Personas
+        </MudNavLink>
+        <MudNavLink Href="/personas/agregar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Agregar
+            Persona
+        </MudNavLink>
+    </MudNavGroup>
+    
+    <MudNavGroup Title="Usuarios" Icon="@Icons.Material.Filled.AssignmentInd" Expanded="true">
+        <MudNavLink Href="/usuarios/listar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Listar
+            Usuarios
+        </MudNavLink>
+        <AuthorizeView Roles="UsuarioAlta">
+            <MudNavLink Href="/usuarios/agregar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Agregar
+                Usuario
+            </MudNavLink>
+        </AuthorizeView>
+    </MudNavGroup>
+    
+    <MudNavGroup Title="Eventos" Icon="@Icons.Material.Filled.Event" Expanded="true">
+        <MudNavLink Href="/eventos/listar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Listar
+            Eventos
+        </MudNavLink>
+        <MudNavLink Href="/eventos/disponibles" Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.EventAvailable">Eventos con Cupo
+        </MudNavLink>
+        <AuthorizeView Roles="EventoAlta">
+            <MudNavLink Href="/eventos/agregar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Agregar
+                Evento
+            </MudNavLink>
+        </AuthorizeView>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Reservas" Icon="@Icons.Material.Filled.BookOnline" Expanded="true">
+        <MudNavLink Href="/reservas/listar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Listar
+            Reservas
+        </MudNavLink>
+        <AuthorizeView Roles="ReservaAlta">
+            <MudNavLink Href="/reservas/agregar" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Nueva
+                Reserva
+            </MudNavLink>
+        </AuthorizeView>
+    </MudNavGroup>
+</MudNavMenu>

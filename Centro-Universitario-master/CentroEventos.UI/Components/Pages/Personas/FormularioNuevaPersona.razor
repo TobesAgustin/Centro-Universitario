@@ -1,0 +1,96 @@
+@using System.ComponentModel.DataAnnotations
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudPaper Elevation="3" Class="pa-8 rounded-lg">
+        <MudForm @ref="_form" Model="_modelo">
+            <MudGrid Spacing="3">
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_modelo.Dni" Label="DNI" Required="true"
+                                  RequiredError="El DNI es requerido" Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Badge"
+                                  AdornmentColor="Color.Primary" FullWidth="true"/>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_modelo.Nombre" Label="Nombre" Required="true"
+                                  RequiredError="El nombre es requerido" Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                                  AdornmentColor="Color.Primary" FullWidth="true"/>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_modelo.Apellido" Label="Apellido" Required="true"
+                                  RequiredError="El apellido es requerido" Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                                  AdornmentColor="Color.Primary" FullWidth="true"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_modelo.Email" Label="Correo Electrónico" Required="true"
+                                  RequiredError="El correo es requerido" Variant="Variant.Outlined"
+                                  InputType="InputType.Email" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Email"
+                                  AdornmentColor="Color.Primary" FullWidth="true"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_modelo.Telefono" Label="Teléfono"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Phone"
+                                  AdornmentColor="Color.Primary" FullWidth="true"/>
+                </MudItem>
+                <MudItem xs="12" class="mt-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               Size="Size.Large"
+                               OnClick="ProcesarFormulario"
+                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                               Class="py-2">
+                            Crear Persona
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public EventCallback<(string DNI, string Nombre, string Apellido, string Email, string Telefono)> OnGuardar { get; set; }
+    [Parameter] public EventCallback<string> OnError { get; set; }
+    private MudForm? _form;
+    private readonly FormularioPersonaModel _modelo = new();
+
+    private async Task ProcesarFormulario()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+            if (!_form.IsValid)
+                return;
+        }
+
+        try
+        {
+            await OnGuardar.InvokeAsync((_modelo.Dni, _modelo.Nombre, _modelo.Apellido, _modelo.Email, _modelo.Telefono));
+        }
+        catch (Exception ex)
+        {
+            await OnError.InvokeAsync(ex.Message);
+        }
+    }
+
+    private class FormularioPersonaModel
+    {
+        [Required(ErrorMessage = "El DNI es requerido")]
+        public string Dni { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El nombre es requerido")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El apellido es requerido")]
+        public string Apellido { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo es requerido")]
+        [EmailAddress(ErrorMessage = "El correo no es válido")]
+        public string Email { get; set; } = string.Empty;
+
+        public string Telefono { get; set; } = string.Empty;
+    }
+}

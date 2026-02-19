@@ -1,0 +1,186 @@
+﻿@page "/eventos/listar"
+@using CentroEventos.Aplicacion.Entities
+@using CentroEventos.Aplicacion.Enum
+@using CentroEventos.Aplicacion.Interfaces
+@using CentroEventos.Aplicacion.UseCases.Evento
+@using CentroEventos.Aplicacion.Service
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject EliminarEventoDeportivoUseCase EliminarEventoUseCase
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ListarEventosDeportivoUseCase Listar
+
+<div class="container-fluid">
+    <MudPaper Elevation="3" Class="pa-6 rounded-lg">
+        <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">
+            <MudIcon Icon="@Icons.Material.Filled.Event" Class="mr-3"/>
+            Eventos Deportivos
+        </MudText>
+        @if (TienePermisoCrear)
+        {
+            <div class="d-flex justify-end mb-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                           Size="Size.Medium"
+                           Class="rounded-lg px-4"
+                           OnClick="AgregarEvento">
+                    Agregar evento
+                </MudButton>
+            </div>
+        }
+        @if (_eventos == null || !_eventos.Any())
+        {
+            <MudAlert Severity="Severity.Info">No hay eventos registrados.</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_eventos"
+                      Hover="true"
+                      Striped="true"
+                      Elevation="0"
+                      Class="mt-4">
+                <HeaderContent>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">Nombre</MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">Descripción</MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">Fecha y Hora</MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">Duración (h)</MudText>
+                    </MudTh>
+                    <MudTh>
+                        <MudText Typo="Typo.subtitle2">Cupo Máximo</MudText>
+                    </MudTh>
+                    @if (TienePermisoModificar || TienePermisoEliminar)
+                    {
+                        <MudTh>
+                            <MudText Typo="Typo.subtitle2">Acciones</MudText>
+                        </MudTh>
+                    }
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
+                    <MudTd DataLabel="Descripción">@context.Description</MudTd>
+                    <MudTd DataLabel="Fecha y Hora">@context.FechaHoraInicio.ToString("g")</MudTd>
+                    <MudTd DataLabel="Duración (h)">@context.DurationHoras</MudTd>
+                    <MudTd DataLabel="Cupo Máximo">@context.CupoMaximo</MudTd>
+                    @if (TienePermisoModificar || TienePermisoEliminar)
+                    {
+                        <MudTd>
+                            @if (TienePermisoModificar)
+                            {
+                                <MudButton Color="Color.Primary"
+                                           Variant="Variant.Filled"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Edit"
+                                           Class="rounded-lg px-3"
+                                           OnClick="@(() => ModificarEvento(context))">
+                                    Modificar
+                                </MudButton>
+                            }
+                            @if (TienePermisoEliminar)
+                            {
+                                <MudButton Color="Color.Error"
+                                           Variant="Variant.Filled"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Delete"
+                                           Class="@(TienePermisoModificar ? "ml-2 rounded-lg px-3" : "rounded-lg px-3")"
+                                           OnClick="@(() => ConfirmarEliminar(context))">
+                                    Eliminar
+                                </MudButton>
+                            }
+                        </MudTd>
+                    }
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+</div>
+
+@code {
+
+    private List<EventoDeportivo>? _eventos = new();
+
+    private System.Security.Claims.ClaimsPrincipal? _user;
+
+    private bool TienePermisoCrear => _user?.IsInRole(Permiso.EventoAlta.ToString()) ?? false;
+    private bool TienePermisoModificar => _user?.IsInRole(Permiso.EventoModificacion.ToString()) ?? false;
+    private bool TienePermisoEliminar => _user?.IsInRole(Permiso.EventoBaja.ToString()) ?? false;
+    private Guid IdUsuario => Guid.Parse(_user?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+        await CargarEventosAsync();
+    }
+
+    private async Task CargarEventosAsync()
+    {
+        try
+        {
+            _eventos = await Listar.EjecutarAsync();
+        }
+        catch (Exception ex)
+        {
+            _eventos = new List<EventoDeportivo>();
+            // If empty list validation throws, just show empty
+            if (!ex.Message.Contains("No hay eventos"))
+                Snackbar.Add($"Error al cargar los eventos: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ModificarEvento(EventoDeportivo evento)
+    {
+        if (TienePermisoModificar)
+        {
+            Navigation.NavigateTo($"/eventos/modificar/{evento.Id}");
+        }
+        else
+        {
+            Snackbar.Add("No tiene permiso para modificar eventos", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmarEliminar(EventoDeportivo evento)
+    {
+        var resultado = await DialogService.ShowMessageBox(
+            "Confirmar",
+            "¿Desea eliminar este evento?",
+            yesText: "Eliminar",
+            cancelText: "Cancelar");
+
+        if (resultado == true)
+        {
+            try
+            {
+                await EliminarEventoUseCase.EjecutarAsync(evento.Id, IdUsuario);
+                await CargarEventosAsync();
+                Snackbar.Add("Evento eliminado con éxito", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error al eliminar el evento: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+
+
+
+
+    private void AgregarEvento()
+    {
+        Navigation.NavigateTo("/eventos/agregar");
+    }
+
+}

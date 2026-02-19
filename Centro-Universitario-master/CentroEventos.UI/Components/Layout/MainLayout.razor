@@ -1,0 +1,76 @@
+﻿@using CentroEventos.Aplicacion.Service
+@using CentroEventos.UI.Components.Pages.Shared
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudThemeProvider />
+
+    <MudLayout>
+        <MudAppBar Elevation="1">
+            @if (!EsPaginaSinMenu)
+            {
+               <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
+            <MudSpacer />
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End">
+                <MudMenuItem OnClick="@OnPerfilClick">Perfil</MudMenuItem>
+                <MudMenuItem OnClick="@OnCerrarSesionClick">Cerrar Sesion</MudMenuItem>
+            </MudMenu>
+            }
+        </MudAppBar>
+        <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@(EsPaginaSinMenu ? DrawerVariant.Temporary : DrawerVariant.Responsive)">
+            <MudDrawerHeader>
+                <MudText Typo="Typo.h5" Class="mt-1">Aplicacion</MudText>
+            </MudDrawerHeader>
+            <NavMenu/>
+        </MudDrawer>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+    </MudLayout>
+
+@code {
+    bool _drawerOpen;
+    
+    private bool EsPaginaSinMenu
+    {
+        get
+        {
+            var rutaActual = NavigationManager.Uri.ToLower();
+            return rutaActual.EndsWith("/") || 
+                   rutaActual.EndsWith("/login") || 
+                   rutaActual.EndsWith("/registro");
+        }
+    }
+    
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (EsPaginaSinMenu)
+        {
+            _drawerOpen = false;
+        }
+        base.OnInitialized();
+    }
+    void OnPerfilClick()
+    {
+        // Lógica para ir al perfil
+        NavigationManager.NavigateTo("/Perfil");
+    }
+
+    void OnCerrarSesionClick()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        customAuthStateProvider.Logout();
+        NavigationManager.NavigateTo("/", true);
+    }
+}

@@ -1,0 +1,75 @@
+﻿@page "/eventos/disponibles"
+@using CentroEventos.Aplicacion.Entities
+@using CentroEventos.Aplicacion.Service
+@using CentroEventos.Aplicacion.UseCases.Evento
+@inject ListarEventosConCupoDisponibleUseCase ListarEventosConCupoUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="container-fluid">
+    <MudPaper Elevation="3" Class="pa-6 rounded-lg">
+        <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">
+            <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Class="mr-3"/>
+            Eventos con Cupo Disponible
+        </MudText>
+
+        @if (!_eventos.Any())
+        {
+            <MudAlert Severity="Severity.Info">No hay eventos con cupo disponible.</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_eventos" Hover="true" Striped="true" Elevation="0" Class="mt-4">
+                <HeaderContent>
+                    <MudTh><MudText Typo="Typo.subtitle2">Nombre</MudText></MudTh>
+                    <MudTh><MudText Typo="Typo.subtitle2">Descripción</MudText></MudTh>
+                    <MudTh><MudText Typo="Typo.subtitle2">Fecha y Hora</MudText></MudTh>
+                    <MudTh><MudText Typo="Typo.subtitle2">Cupo Máximo</MudText></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
+                    <MudTd DataLabel="Descripción">@context.Description</MudTd>
+                    <MudTd DataLabel="Fecha y Hora">@context.FechaHoraInicio.ToString("g")</MudTd>
+                    <MudTd DataLabel="Cupo Máximo">@context.CupoMaximo</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+        <div class="d-flex justify-end mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Volver">
+                Volver
+            </MudButton>
+        </div>
+    </MudPaper>
+</div>
+
+@code {
+    private List<EventoDeportivo> _eventos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEventosAsync();
+    }
+
+    private async Task CargarEventosAsync()
+    {
+        try
+        {
+            _eventos = await ListarEventosConCupoUseCase.EjecutarAsync();
+        }
+        catch (Exception ex)
+        {
+            _eventos = new List<EventoDeportivo>();
+            if (!ex.Message.Contains("No hay eventos"))
+                Snackbar.Add($"Error al cargar los eventos: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Volver()
+    {
+        NavigationManager.NavigateTo("/eventos/listar");
+    }
+}

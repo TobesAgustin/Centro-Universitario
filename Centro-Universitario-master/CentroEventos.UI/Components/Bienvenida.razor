@@ -1,0 +1,52 @@
+﻿@page "/"
+
+<PageTitle>Bienvenida - Centro de Eventos</PageTitle>
+
+<div class="background-container" Style="margin-top: 50px;">
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column justify-center align-center min-vh-100">
+        <MudPaper Elevation="4" Class="welcome-paper">
+            <MudStack Row="false" Spacing="6" AlignItems="AlignItems.Center" Class="pa-8">
+                <div class="icon-container">
+                    <MudIcon Icon="@Icons.Material.Filled.Event" 
+                            Color="Color.Primary" 
+                            Size="Size.Large" 
+                            Class="welcome-icon" />
+                </div>
+                
+                <div class="text-container">
+                    <MudText Typo="Typo.h3" 
+                            Align="Align.Center" 
+                            Color="Color.Primary" 
+                            Class="welcome-title">
+                        ¡Bienvenido a Centro de Eventos!
+                    </MudText>
+                    
+                    <MudText Typo="Typo.subtitle1" 
+                            Align="Align.Center" 
+                            Class="welcome-subtitle">
+                        Gestiona tus eventos deportivos de manera fácil y segura.
+                    </MudText>
+                </div>
+
+                <MudDivider Class="my-4" />
+
+                <div class="buttons-container">
+                    <MudButton Href="/Login"
+                              Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              Size="Size.Large"
+                              Class="welcome-button">
+                        Iniciar sesión
+                    </MudButton>
+                    <MudButton Href="/Registro"
+                              Variant="Variant.Outlined" 
+                              Color="Color.Secondary" 
+                              Size="Size.Large"
+                              Class="welcome-button">
+                        Registrarse
+                    </MudButton>
+                </div>
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+</div>

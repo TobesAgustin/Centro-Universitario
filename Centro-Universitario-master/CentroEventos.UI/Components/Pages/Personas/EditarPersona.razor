@@ -1,0 +1,105 @@
+﻿@page "/personas/editar/{Id:guid}"
+@using CentroEventos.Aplicacion.Entities
+@using CentroEventos.Aplicacion.Service
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject CentroEventos.Aplicacion.UseCases.Personas.ModificarPersonaUseCase ModificarPersonaUseCase
+@inject Aplicacion.Interfaces.IRepositorioPersona RepositorioPersona
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Editar Persona</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudPaper Elevation="3" Class="pa-8 rounded-lg">
+        <MudText Typo="Typo.h4" Color="Color.Primary" Align="Align.Center" Class="mb-4 font-weight-bold">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="me-2"/>Editar Persona
+        </MudText>
+        @if (_persona is null)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="mx-auto d-block my-6"/>
+        }
+        else
+        {
+            <EditForm Model="_persona" OnValidSubmit="GuardarCambios">
+                <DataAnnotationsValidator/>
+                <MudGrid Spacing="3">
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_persona.Dni" Label="DNI" Required="true" Variant="Variant.Outlined"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Badge"
+                                      AdornmentColor="Color.Primary" FullWidth="true"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_persona.Nombre" Label="Nombre" Required="true" Variant="Variant.Outlined"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                                      AdornmentColor="Color.Primary" FullWidth="true"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_persona.Apellido" Label="Apellido" Required="true" Variant="Variant.Outlined"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                                      AdornmentColor="Color.Primary" FullWidth="true"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_persona.Email" Label="Correo Electrónico" Required="true" Variant="Variant.Outlined"
+                                      InputType="InputType.Email" Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Email" AdornmentColor="Color.Primary" FullWidth="true"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_persona.Telefono" Label="Teléfono" Variant="Variant.Outlined"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Phone"
+                                      AdornmentColor="Color.Primary" FullWidth="true"/>
+                    </MudItem>
+                    <MudItem xs="12" class="d-flex justify-space-between mt-6">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancelar" StartIcon="@Icons.Material.Filled.ArrowBack">
+                            Cancelar
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Save">
+                            Guardar
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Persona? _persona;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _persona = await RepositorioPersona.BuscarPorIdAsync(Id);
+            if (_persona is not null) return;
+            Snackbar.Add("Persona no encontrada", Severity.Error);
+            Navigation.NavigateTo("/personas/listar");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Navigation.NavigateTo("/personas/listar");
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        try
+        {
+            if (_persona != null) await ModificarPersonaUseCase.EjecutarAsync(_persona);
+            Snackbar.Add("Persona modificada correctamente", Severity.Success);
+            Navigation.NavigateTo("/personas/listar");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+        
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/personas/listar");
+    }
+}
